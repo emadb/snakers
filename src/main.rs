@@ -15,6 +15,7 @@ use std::process;
 
 struct Position(f64, f64);
 
+#[derive(PartialEq)]
 enum Direction {
     North,
     East,
@@ -46,34 +47,52 @@ pub struct App {
 impl App {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
-        const BACKGROUND: [f32; 4] = [0.0, 0.5, 0.5, 1.0];
-        const FOREGROUND: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+        const BACKGROUND: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
+        const FOREGROUND: [f32; 4] = [0.0, 0.4, 1.0, 1.0];
 
-        let snake = rectangle::square(0.0, 0.0, 50.0);
+        let Position(x, y) = self.snake.head;
+        let snake = rectangle::square(x, y, 10.0);
 
         self.gl.draw(args.viewport(), |c, gl| {
             clear(BACKGROUND, gl);
-            rectangle(FOREGROUND, snake, c.transform.trans(-40.0, 10.0), gl);
+            rectangle(FOREGROUND, snake, c.transform.trans(0.0, 0.0), gl);
         });
     }
     fn update(&mut self, _args: &UpdateArgs) {
-        println!("update");
+        let Position(x, y) = self.snake.head;
+
+        let step = 1.0;
+
+        match self.snake.direction {
+            Direction::North => self.snake.head = Position(x, y - step),
+            Direction::East => self.snake.head = Position(x + step, y),
+            Direction::South => self.snake.head = Position(x, y + step),
+            Direction::West => self.snake.head = Position(x - step, y),
+        }
     }
 
     fn press(&mut self, args: &Button) {
         if let &Button::Keyboard(key) = args {
             match key {
                 Key::Up => {
-                    // up
+                    if self.snake.direction != Direction::South {
+                        self.snake.direction = Direction::North
+                    }
                 }
                 Key::Down => {
-                    // down
+                    if self.snake.direction != Direction::North {
+                        self.snake.direction = Direction::South
+                    }
                 }
                 Key::Left => {
-                    // Left
+                    if self.snake.direction != Direction::East {
+                        self.snake.direction = Direction::West
+                    }
                 }
                 Key::Right => {
-                    // Right
+                    if self.snake.direction != Direction::West {
+                        self.snake.direction = Direction::East
+                    }
                 }
                 _ => {}
             }
@@ -83,7 +102,7 @@ impl App {
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let mut window: Window = WindowSettings::new("snake", [200, 200])
+    let mut window: Window = WindowSettings::new("snake", [600, 600])
         .graphics_api(opengl)
         .exit_on_esc(true)
         .build()
@@ -91,7 +110,7 @@ fn main() {
 
     let mut app = App {
         gl: GlGraphics::new(opengl),
-        snake: Snake::new(Position(10.0, 10.0), Direction::East),
+        snake: Snake::new(Position(100.0, 100.0), Direction::East),
     };
 
     let mut events = Events::new(EventSettings::new());
