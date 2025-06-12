@@ -13,8 +13,10 @@ use piston::input::{
 use rand::Rng;
 
 use piston::window::WindowSettings;
-use std::process;
 
+const STEP: i32 = 10;
+
+#[derive(Clone)]
 struct Position(f64, f64);
 
 impl PartialEq for Position {
@@ -22,6 +24,8 @@ impl PartialEq for Position {
         (self.0 == other.0) && (self.1 == other.1)
     }
 }
+
+// impl Copy for Position {}
 
 #[derive(PartialEq)]
 enum Direction {
@@ -33,6 +37,7 @@ enum Direction {
 
 struct Snake {
     head: Position,
+    tail: Vec<Position>,
     len: u32,
     direction: Direction,
 }
@@ -46,8 +51,8 @@ impl Food {
     fn next_pos(self: &mut Self) {
         let mut rng = rand::rng();
         self.count += 1;
-        let new_x = (rng.random_range(0..60) * 10) as f64;
-        let new_y = (rng.random_range(0..60) * 10) as f64;
+        let new_x = (rng.random_range(0..60) * STEP) as f64;
+        let new_y = (rng.random_range(0..60) * STEP) as f64;
         self.pos = Position(new_x, new_y);
     }
 }
@@ -56,8 +61,17 @@ impl Snake {
     fn new(pos: Position, dir: Direction) -> Snake {
         Snake {
             head: pos,
-            len: 2,
+            tail: vec![],
+            len: 1,
             direction: dir,
+        }
+    }
+    fn grow(self: &mut Self) {
+        self.len += 1;
+        let last = self.tail.last();
+        match last {
+            Some(l) => self.tail.push(l.clone()),
+            None => self.tail.push(self.head.clone()),
         }
     }
 }
@@ -81,30 +95,36 @@ impl App {
 
         self.gl.draw(args.viewport(), |c, gl| {
             clear(BACKGROUND, gl);
-            rectangle(SNAKE, snake, c.transform.trans(0.0, 0.0), gl);
-
             rectangle(FOOD, food, c.transform.trans(0.0, 0.0), gl);
+            rectangle(SNAKE, snake, c.transform.trans(0.0, 0.0), gl);
+            for sn in &self.snake.tail {
+                let Position(xs, ys) = sn;
+                let t = rectangle::square(*xs, *ys, 10.0);
+                rectangle(SNAKE, t, c.transform.trans(0.0, 0.0), gl);
+            }
         });
     }
+
     fn update(&mut self, _args: &UpdateArgs) {
         let Position(x, y) = self.snake.head;
-
-        let step = 10.0;
+        let mut prev = self.snake.head.clone();
 
         match self.snake.direction {
-            Direction::North => self.snake.head = Position(x, y - step),
-            Direction::East => self.snake.head = Position(x + step, y),
-            Direction::South => self.snake.head = Position(x, y + step),
-            Direction::West => self.snake.head = Position(x - step, y),
+            Direction::North => self.snake.head = Position(x, y - STEP as f64),
+            Direction::East => self.snake.head = Position(x + STEP as f64, y),
+            Direction::South => self.snake.head = Position(x, y + STEP as f64),
+            Direction::West => self.snake.head = Position(x - STEP as f64, y),
         }
 
-        println!(
-            "SNAKE: ?{} ?{}   FOOD: ?{} ?{}",
-            self.snake.head.0, self.snake.head.1, self.food.pos.0, self.food.pos.1
-        );
+        for sn in &mut self.snake.tail {
+            let temp = sn.clone();
+            *sn = prev;
+            prev = temp;
+        }
 
         if self.snake.head == self.food.pos {
-            self.food.next_pos()
+            self.snake.grow();
+            self.food.next_pos();
         }
     }
 
