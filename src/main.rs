@@ -4,15 +4,14 @@ extern crate opengl_graphics;
 extern crate piston;
 
 use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{GlGraphics, OpenGL};
+use opengl_graphics::{GlGraphics, GlyphCache, OpenGL, TextureSettings};
 use piston::EventLoop;
 use piston::event_loop::{EventSettings, Events};
 use piston::input::{
     Button, Key, PressEvent, ReleaseEvent, RenderArgs, RenderEvent, UpdateArgs, UpdateEvent,
 };
-use rand::Rng;
-
 use piston::window::WindowSettings;
+use rand::Rng;
 
 const STEP: i32 = 10;
 
@@ -80,6 +79,7 @@ pub struct App {
     gl: GlGraphics,
     snake: Snake,
     food: Food,
+    font: GlyphCache<'static>,
 }
 
 impl App {
@@ -88,6 +88,7 @@ impl App {
         const BACKGROUND: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
         const SNAKE: [f32; 4] = [0.0, 0.4, 1.0, 1.0];
         const FOOD: [f32; 4] = [0.9, 0.1, 0.1, 1.0];
+        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
         let Position(x, y) = self.snake.head;
         let snake = rectangle::square(x, y, 10.0);
@@ -95,6 +96,16 @@ impl App {
 
         self.gl.draw(args.viewport(), |c, gl| {
             clear(BACKGROUND, gl);
+
+            text(
+                WHITE,
+                32,
+                self.snake.len.to_string().as_str(),
+                &mut self.font,
+                c.transform.trans(10.0, 50.0),
+                gl,
+            )
+            .unwrap();
             rectangle(FOOD, food, c.transform.trans(0.0, 0.0), gl);
             rectangle(SNAKE, snake, c.transform.trans(0.0, 0.0), gl);
             for sn in &self.snake.tail {
@@ -165,6 +176,9 @@ fn main() {
         .build()
         .unwrap();
 
+    let font =
+        GlyphCache::new("assets/JBF.ttf", (), TextureSettings::new()).expect("Could not load font");
+
     let mut app = App {
         gl: GlGraphics::new(opengl),
         snake: Snake::new(Position(100.0, 100.0), Direction::East),
@@ -172,6 +186,7 @@ fn main() {
             pos: Position(500.0, 500.0),
             count: 1,
         },
+        font,
     };
 
     let mut events = Events::new(EventSettings::new().max_fps(20).ups(20));
