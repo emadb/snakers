@@ -34,11 +34,18 @@ enum Direction {
     West,
 }
 
+enum SnakeStates {
+    Alive,
+    SelfEaten,
+    Smashed,
+}
+
 struct Snake {
     head: Position,
     tail: Vec<Position>,
     len: u32,
     direction: Direction,
+    state: SnakeStates,
 }
 
 struct Food {
@@ -63,6 +70,7 @@ impl Snake {
             tail: vec![],
             len: 1,
             direction: dir,
+            state: SnakeStates::Alive,
         }
     }
     fn grow(self: &mut Self) {
@@ -90,30 +98,48 @@ impl App {
         const FOOD: [f32; 4] = [0.9, 0.1, 0.1, 1.0];
         const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
-        let Position(x, y) = self.snake.head;
-        let snake = rectangle::square(x, y, 10.0);
-        let food = rectangle::square(self.food.pos.0, self.food.pos.1, 10.0);
+        match self.snake.state {
+            SnakeStates::Alive => {
+                let Position(x, y) = self.snake.head;
+                let snake = rectangle::square(x, y, 10.0);
+                let food = rectangle::square(self.food.pos.0, self.food.pos.1, 10.0);
 
-        self.gl.draw(args.viewport(), |c, gl| {
-            clear(BACKGROUND, gl);
+                self.gl.draw(args.viewport(), |c, gl| {
+                    clear(BACKGROUND, gl);
 
-            text(
-                WHITE,
-                32,
-                self.snake.len.to_string().as_str(),
-                &mut self.font,
-                c.transform.trans(10.0, 50.0),
-                gl,
-            )
-            .unwrap();
-            rectangle(FOOD, food, c.transform.trans(0.0, 0.0), gl);
-            rectangle(SNAKE, snake, c.transform.trans(0.0, 0.0), gl);
-            for sn in &self.snake.tail {
-                let Position(xs, ys) = sn;
-                let t = rectangle::square(*xs, *ys, 10.0);
-                rectangle(SNAKE, t, c.transform.trans(0.0, 0.0), gl);
+                    text(
+                        WHITE,
+                        32,
+                        self.snake.len.to_string().as_str(),
+                        &mut self.font,
+                        c.transform.trans(10.0, 50.0),
+                        gl,
+                    )
+                    .unwrap();
+                    rectangle(FOOD, food, c.transform.trans(0.0, 0.0), gl);
+                    rectangle(SNAKE, snake, c.transform.trans(0.0, 0.0), gl);
+                    for sn in &self.snake.tail {
+                        let Position(xs, ys) = sn;
+                        let t = rectangle::square(*xs, *ys, 10.0);
+                        rectangle(SNAKE, t, c.transform.trans(0.0, 0.0), gl);
+                    }
+                });
             }
-        });
+            SnakeStates::SelfEaten => self.gl.draw(args.viewport(), |c, gl| {
+                clear(BACKGROUND, gl);
+
+                text(
+                    WHITE,
+                    32,
+                    "GAME OVER :-(",
+                    &mut self.font,
+                    c.transform.trans(200.0, 250.0),
+                    gl,
+                )
+                .unwrap();
+            }),
+            SnakeStates::Smashed => {}
+        }
     }
 
     fn update(&mut self, _args: &UpdateArgs) {
@@ -131,6 +157,10 @@ impl App {
             let temp = sn.clone();
             *sn = prev;
             prev = temp;
+        }
+
+        if self.snake.tail.contains(&self.snake.head) {
+            self.snake.state = SnakeStates::SelfEaten;
         }
 
         if self.snake.head == self.food.pos {
