@@ -22,6 +22,8 @@ pub struct Snake {
     pub state: SnakeStates,
 }
 
+const STEP: i32 = 10;
+
 impl Snake {
     pub fn new(pos: Position, dir: Direction) -> Snake {
         Snake {
@@ -38,6 +40,27 @@ impl Snake {
         match last {
             Some(l) => self.tail.push(l.clone()),
             None => self.tail.push(self.head.clone()),
+        }
+    }
+    pub fn next(&mut self) {
+        let Position(x, y) = self.head;
+        let mut prev = self.head.clone();
+
+        match self.direction {
+            Direction::North => self.head = Position(x, y - STEP as f64),
+            Direction::East => self.head = Position(x + STEP as f64, y),
+            Direction::South => self.head = Position(x, y + STEP as f64),
+            Direction::West => self.head = Position(x - STEP as f64, y),
+        }
+
+        for sn in &mut self.tail {
+            let temp = sn.clone();
+            *sn = prev;
+            prev = temp;
+        }
+
+        if self.tail.contains(&self.head) {
+            self.state = SnakeStates::SelfEaten;
         }
     }
 }

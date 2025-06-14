@@ -20,6 +20,7 @@ use rand::Rng;
 use snake::{Direction, Snake};
 
 use crate::food::Food;
+const STEP: i32 = 10;
 
 fn main() {
     let opengl = OpenGL::V3_2;
@@ -35,10 +36,10 @@ fn main() {
     let mut rng = rand::rng();
 
     let mut walls: Vec<Position> = vec![];
-    for _ in 1..50 {
+    for _ in 1..20 {
         walls.push(Position::new(
-            rng.random_range(1..600) as f64,
-            rng.random_range(1..600) as f64,
+            (rng.random_range(0..60) * STEP) as f64,
+            (rng.random_range(0..60) * STEP) as f64,
         ));
     }
 
