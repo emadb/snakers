@@ -1,7 +1,6 @@
 use crate::food::Food;
 use crate::position::Position;
 use crate::snake::{Direction, Snake, SnakeStates};
-use crate::{HEIGHT, WIDTH};
 use macroquad::color;
 use macroquad::input::is_key_down;
 use macroquad::prelude::KeyCode;
@@ -40,7 +39,6 @@ impl App {
     pub fn render(&mut self) {
         match self.snake.state {
             SnakeStates::Alive => {
-                draw_borders();
                 draw_walls(&self.walls[..]);
                 draw_points(&self.snake.len);
                 draw_food(&self.food);
@@ -99,18 +97,14 @@ fn check_walls(snake: &mut Snake, walls: &Vec<Position>) {
 }
 
 fn check_position(snake: &mut Snake) {
-    // if snake.head.0 < 0.0 || snake.head.0 > crate::WIDTH {
-    //     println!("OUT OF SCREEN (W)");
-    //     snake.smash();
-    // }
-    // if snake.head.1 < 0.0 || snake.head.1 > crate::HEIGHT {
-    //     println!("OUT OF SCREEN (H)");
-    //     snake.smash();
-    // }
+    if snake.head.0 < 0.0 || snake.head.0 > crate::WIDTH {
+        snake.smash();
+    }
+    if snake.head.1 < 0.0 || snake.head.1 > crate::HEIGHT {
+        snake.smash();
+    }
 }
-fn draw_borders() {
-    // draw_rectangle(0.0, 0.0, WIDTH, HEIGHT, color::GRAY);
-}
+
 fn draw_food(food: &Food) {
     draw_rectangle(food.pos.0, food.pos.1, 10.0, 10.0, color::RED);
 }
@@ -122,7 +116,7 @@ fn draw_walls(walls: &[Position]) {
 }
 
 fn draw_points(points: &u32) {
-    draw_text(points.to_string().as_str(), 5.0, 50.0, 32.0, color::WHITE);
+    draw_text(points.to_string().as_str(), 5.0, 20.0, 32.0, color::WHITE);
 }
 
 fn draw_snake(snake: &Snake) {
