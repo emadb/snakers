@@ -5,6 +5,8 @@ use crate::food::Food;
 use crate::position::Position;
 use crate::snake::{Direction, Snake, SnakeStates};
 use graphics::*;
+use opengl_graphics::{OpenGL, TextureSettings};
+use rand::Rng;
 
 pub struct App {
     pub gl: GlGraphics,
@@ -15,6 +17,32 @@ pub struct App {
 }
 
 impl App {
+    pub fn new(opengl: OpenGL) -> App {
+        let font = GlyphCache::new("assets/JBF.ttf", (), TextureSettings::new())
+            .expect("Could not load font");
+
+        let mut rng = rand::rng();
+
+        let mut walls: Vec<Position> = vec![];
+        for _ in 1..20 {
+            walls.push(Position::new(
+                (rng.random_range(0..60) * crate::STEP) as f64,
+                (rng.random_range(0..60) * crate::STEP) as f64,
+            ));
+        }
+
+        App {
+            gl: GlGraphics::new(opengl),
+            snake: Snake::new(Position::new(100.0, 100.0), Direction::East),
+            food: Food {
+                pos: Position::new(500.0, 500.0),
+                count: 1,
+            },
+            walls,
+            font,
+        }
+    }
+
     pub fn render(&mut self, args: &RenderArgs) {
         const BACKGROUND: [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
@@ -43,39 +71,53 @@ impl App {
 
     pub fn update(&mut self, _args: &UpdateArgs) {
         self.snake.next();
-
-        // Check food
-        if self.snake.head == self.food.pos {
-            self.snake.grow();
-            self.food.next_pos();
-        }
-
-        // Check walls
-        for w in &self.walls {
-            if self.snake.head == *w {
-                self.snake.state = SnakeStates::Smashed;
-            }
-        }
+        check_food(&mut self.snake, &mut self.food);
+        check_walls(&mut self.snake, &self.walls);
+        check_position(&mut self.snake);
     }
 
     pub fn press(&mut self, args: &Button) {
         if let &Button::Keyboard(key) = args {
             match key {
-                Key::Up => change_direction(&mut self.snake, Direction::South, Direction::North),
-                Key::Down => change_direction(&mut self.snake, Direction::North, Direction::South),
-                Key::Left => change_direction(&mut self.snake, Direction::East, Direction::West),
-                Key::Right => change_direction(&mut self.snake, Direction::West, Direction::East),
+                Key::Up => self
+                    .snake
+                    .change_direction(Direction::South, Direction::North),
+                Key::Down => self
+                    .snake
+                    .change_direction(Direction::North, Direction::South),
+                Key::Left => self
+                    .snake
+                    .change_direction(Direction::East, Direction::West),
+                Key::Right => self
+                    .snake
+                    .change_direction(Direction::West, Direction::East),
                 _ => {}
             }
         }
     }
 }
 
-fn change_direction(snake: &mut Snake, from: Direction, to: Direction) {
-    if snake.direction != from {
-        snake.direction = to
-    } else {
-        snake.state = SnakeStates::SelfEaten;
+fn check_food(snake: &mut Snake, food: &mut Food) {
+    if snake.head == food.pos {
+        snake.grow();
+        food.create_new();
+    }
+}
+
+fn check_walls(snake: &mut Snake, walls: &Vec<Position>) {
+    for w in walls {
+        if snake.head == *w {
+            snake.smash();
+        }
+    }
+}
+
+fn check_position(snake: &mut Snake) {
+    if snake.head.0 < 0.0 || snake.head.0 > crate::WIDTH {
+        snake.smash();
+    }
+    if snake.head.1 < 0.0 || snake.head.1 > crate::HEIGHT {
+        snake.smash();
     }
 }
 
