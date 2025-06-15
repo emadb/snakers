@@ -1,52 +1,28 @@
-extern crate glutin_window;
-extern crate graphics;
-extern crate opengl_graphics;
-extern crate piston;
-
+use macroquad::prelude::*;
 pub mod app;
 pub mod food;
 pub mod position;
 pub mod snake;
 
 use app::App;
-use glutin_window::GlutinWindow as Window;
-use opengl_graphics::OpenGL;
-use piston::EventLoop;
-use piston::event_loop::{EventSettings, Events};
-use piston::input::{PressEvent, RenderEvent, UpdateEvent};
-use piston::window::WindowSettings;
 
 pub const STEP: i32 = 10;
-pub const WIDTH: f64 = 600.0;
-pub const HEIGHT: f64 = 600.0;
+pub const WIDTH: f32 = 600.0;
+pub const HEIGHT: f32 = 600.0;
+pub const SNAKE_UPDATE_INTERVAL: f64 = 0.05;
 
-fn main() {
-    let opengl = OpenGL::V3_2;
-    let mut window: Window = WindowSettings::new("snake", [WIDTH, HEIGHT])
-        .graphics_api(opengl)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
-
-    let mut app = App::new(opengl);
-
-    let mut events = Events::new(EventSettings::new().max_fps(20).ups(20));
-
-    while let Some(e) = events.next(&mut window) {
-        if let Some(r) = e.render_args() {
-            app.render(&r);
+#[macroquad::main("snakers")]
+async fn main() {
+    let mut app = App::new();
+    let mut last_update_time = get_time();
+    loop {
+        clear_background(BLACK);
+        app.handle_keys();
+        if get_time() - last_update_time > SNAKE_UPDATE_INTERVAL {
+            last_update_time = get_time();
+            app.update();
         }
-
-        if let Some(u) = e.update_args() {
-            app.update(&u);
-        }
-
-        if let Some(b) = e.press_args() {
-            app.press(&b);
-        }
-
-        // if let Some(b) = e.release_args() {
-        //     app.release(&b);
-        // }
+        app.render();
+        next_frame().await;
     }
 }

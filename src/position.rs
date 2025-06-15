@@ -1,8 +1,8 @@
 #[derive(Clone)]
-pub struct Position(pub f64, pub f64);
+pub struct Position(pub f32, pub f32);
 
 impl Position {
-    pub fn new(x: f64, y: f64) -> Position {
+    pub fn new(x: f32, y: f32) -> Position {
         Position(x, y)
     }
 }

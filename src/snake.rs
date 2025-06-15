@@ -45,10 +45,10 @@ impl Snake {
         let mut prev = self.head.clone();
 
         match self.direction {
-            Direction::North => self.head = Position(x, y - crate::STEP as f64),
-            Direction::East => self.head = Position(x + crate::STEP as f64, y),
-            Direction::South => self.head = Position(x, y + crate::STEP as f64),
-            Direction::West => self.head = Position(x - crate::STEP as f64, y),
+            Direction::North => self.head = Position(x, y - crate::STEP as f32),
+            Direction::East => self.head = Position(x + crate::STEP as f32, y),
+            Direction::South => self.head = Position(x, y + crate::STEP as f32),
+            Direction::West => self.head = Position(x - crate::STEP as f32, y),
         }
 
         for sn in &mut self.tail {
