@@ -1,4 +1,5 @@
 use crate::food::Food;
+use crate::lcg::*;
 use crate::position::Position;
 use crate::snake::{Direction, Snake, SnakeStates};
 use macroquad::color;
@@ -6,7 +7,6 @@ use macroquad::input::is_key_down;
 use macroquad::prelude::KeyCode;
 use macroquad::shapes::draw_rectangle;
 use macroquad::text::draw_text;
-use rand::Rng;
 
 pub struct App {
     pub snake: Snake,
@@ -16,13 +16,16 @@ pub struct App {
 
 impl App {
     pub fn new() -> App {
-        let mut rng = rand::rng();
+        let mut rng = Lcg::new();
 
         let mut walls: Vec<Position> = vec![];
         for _ in 1..20 {
+            let rx = rng.gen_range(0, 60) as i32;
+            let ry = rng.gen_range(0, 60) as i32;
+
             walls.push(Position::new(
-                (rng.random_range(0..60) * crate::STEP) as f32,
-                (rng.random_range(0..60) * crate::STEP) as f32,
+                (rx * crate::STEP) as f32,
+                (ry * crate::STEP) as f32,
             ));
         }
 

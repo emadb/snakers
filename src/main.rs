@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 pub mod app;
 pub mod food;
+pub mod lcg;
 pub mod position;
 pub mod snake;
 
