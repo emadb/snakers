@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{color, prelude::*};
 pub mod app;
 pub mod food;
 pub mod lcg;
@@ -14,6 +14,14 @@ pub const SNAKE_UPDATE_INTERVAL: f64 = 0.05;
 
 #[macroquad::main("snakers")]
 async fn main() {
+    loop {
+        draw_text("PRESS ENTER TO START", 200.0, 250.0, 32.0, color::WHITE);
+        next_frame().await;
+        if is_key_down(KeyCode::Enter) {
+            break;
+        }
+    }
+
     let mut app = App::new();
     let mut last_update_time = get_time();
     loop {

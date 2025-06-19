@@ -1,5 +1,3 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 // A simple Linear Congruential Generator (LCG)
 pub struct Lcg {
     state: u64,
@@ -8,10 +6,8 @@ pub struct Lcg {
 impl Lcg {
     // Creates a new LCG seeded with the current system time.
     pub fn new() -> Self {
-        let seed = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_nanos() as u64;
+        macroquad::rand::srand(Self::get_new_seed());
+        let seed = macroquad::rand::rand() as u64;
         Self { state: seed }
     }
 
@@ -43,5 +39,13 @@ impl Lcg {
             }
         }
         min + (rand_val % range)
+    }
+
+    fn get_new_seed() -> u64 {
+        let mut string_time = macroquad::time::get_time().to_string();
+        let dot_position = macroquad::time::get_time().to_string().find('.').unwrap();
+        string_time.remove(dot_position);
+
+        string_time.parse::<u64>().unwrap()
     }
 }
