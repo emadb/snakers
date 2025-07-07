@@ -1,1 +1,1 @@
-# Snaker RS - An implementation of the Snake in Rust
+# Snakers - An implementation of the Snake Game in Rust
